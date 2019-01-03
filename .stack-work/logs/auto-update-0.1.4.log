@@ -1,0 +1,9 @@
+Configuring auto-update-0.1.4...
+Preprocessing library for auto-update-0.1.4..
+Building library for auto-update-0.1.4..
+[1 of 4] Compiling Control.AutoUpdate ( Control/AutoUpdate.hs, .stack-work/dist/x86_64-osx/Cabal-2.4.0.1/build/Control/AutoUpdate.o )
+[2 of 4] Compiling Control.AutoUpdate.Util ( Control/AutoUpdate/Util.hs, .stack-work/dist/x86_64-osx/Cabal-2.4.0.1/build/Control/AutoUpdate/Util.o )
+[3 of 4] Compiling Control.Debounce ( Control/Debounce.hs, .stack-work/dist/x86_64-osx/Cabal-2.4.0.1/build/Control/Debounce.o )
+[4 of 4] Compiling Control.Reaper   ( Control/Reaper.hs, .stack-work/dist/x86_64-osx/Cabal-2.4.0.1/build/Control/Reaper.o )
+Installing library in /Users/you/.stack/snapshots/x86_64-osx/lts-13.1/8.6.3/lib/x86_64-osx-ghc-8.6.3/auto-update-0.1.4-JkSw4eg9S3X18mq8pcespF
+Registering library for auto-update-0.1.4..
