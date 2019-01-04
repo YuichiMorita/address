@@ -16,13 +16,11 @@ Haskell Servant PostgreSQLで住所録WebAPI
 |GET|/users/:id|指定ユーザーの情報|
 |POST|/users|新規ユーザー登録|
 |PUT|/users/:id|指定ユーザの更新|
-|PATCH|/users/:id|指定ユーザの部分更新|
 |DELETE|/users/:id|指定ユーザの削除|
 |||
 |GET|/tags|タグリスト|
 |GET|/tags/:id|指定タグの情報|
 |POST|/tags|新規タグの登録|
 |PUT|/tags/:id|指定タグの更新|
-|PATCH|/tags/:id|指定タグの部分更新|
 |DELETE|/tags/:id|指定タグの削除|
 

@@ -20,7 +20,18 @@ data User = User
 
 $(deriveJSON defaultOptions ''User)
 
+type Uuid = String
+
 type API = "users" :> Get '[JSON] [User]
+        :<|> "users" :> Capture "id" Uuid :> Get '[JSON] User
+        :<|> "users" :> ReqBody '[JSON] User :> Post '[JSON] User
+        :<|> "users" :> Capture "id" Uuid :> ReqBody '[JSON] User :> Put '[JSON] User
+        :<|> "users" :> Capture "id" Uuid :> DeleteNoContent '[JSON] NoContent
+        :<|> "tags" :> Get '[JSON] [Tag]
+        :<|> "tags" :> Capture "id" Integer :> Get '[JSON] Tag
+        :<|> "tags" :> ReqBody '[JSON] Tag :> Post '[JSON] Tag
+        :<|> "tags" :> Capture "id" Integer :> ReqBody '[JSON] Tag :> Put '[JSON] Tag
+        :<|> "tags" :> Capture "id" Integer :> DeleteNoContent '[JSON] NoContent
 
 startApp :: IO ()
 startApp = run 8080 app
