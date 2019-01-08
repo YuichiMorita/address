@@ -24,14 +24,9 @@ data User = User
 
 $(deriveJSON defaultOptions ''User)
 
-users :: [User]
-users = [ User "11111-1111-1111" Nothing Nothing "山田 太郎" Nothing
-        , User "22222-2222-2222" (Just "株式会社井上") (Just "代表取締役") "井上 太郎" (Just "メモメモ")
-        ]
-
-yamada :: String -> User
-yamada _ = users !! 2
-
+------------------
+-- エンドポイント
+------------------
 type API = "users" :> Get '[JSON] [User]
         :<|> "users" :> Capture "id" Uuid :> Get '[JSON] User
 --      :<|> "users" :> ReqBody '[JSON] User :> Post '[JSON] User
@@ -43,10 +38,28 @@ type API = "users" :> Get '[JSON] [User]
 --      :<|> "tags" :> Capture "id" Integer :> ReqBody '[JSON] Tag :> Put '[JSON] Tag
 --      :<|> "tags" :> Capture "id" Integer :> DeleteNoContent '[JSON] NoContent
 
-server :: Server API
-server = return users
-        :<|> return yamada "test"
+------------------
+-- ハンドラ
+------------------
+users :: [User]
+users =  [ User "11111-1111-1111" Nothing Nothing "山田 太郎" Nothing
+        , User "22222-2222-2222" (Just "株式会社井上") (Just "代表取締役") "井上 太郎" (Just "メモメモ")
+        ]
+-- /users
+allUsers :: Handler [User]
+allUsers = return users
 
+-- /users/:Uuid
+yamada :: Uuid -> Handler User
+yamada _ = return (users !! 1)
+
+server :: Server API
+server = allUsers
+    :<|> yamada
+
+------------------
+-- サーバ
+------------------
 app :: Application
 app = serve api server
 

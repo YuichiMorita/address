@@ -1,6 +1,0 @@
-Configuring byteorder-1.0.4...
-Preprocessing library for byteorder-1.0.4..
-Building library for byteorder-1.0.4..
-[1 of 1] Compiling System.ByteOrder ( System/ByteOrder.hs, .stack-work/dist/x86_64-osx/Cabal-2.4.0.1/build/System/ByteOrder.o )
-Installing library in /Users/you/.stack/snapshots/x86_64-osx/lts-13.1/8.6.3/lib/x86_64-osx-ghc-8.6.3/byteorder-1.0.4-IVStE0plZAH4UpHo5zwztw
-Registering library for byteorder-1.0.4..
