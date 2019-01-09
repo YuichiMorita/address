@@ -60,11 +60,16 @@ server = allUsers
 ------------------
 -- サーバ
 ------------------
-app :: Application
-app = serve api server
-
 api :: Proxy API
 api = Proxy
 
+
+-- Application はWaiの型らしい
+-- type Application = Request -> ResourceT IO Response
+app :: Application
+app = serve api server
+
+-- runはWarpの関数らしい
+-- run::Port -> Application -> IO()
 startApp :: IO ()
 startApp = run 8080 app
