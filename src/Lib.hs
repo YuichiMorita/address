@@ -12,6 +12,21 @@ import Data.Aeson.TH
 import Network.Wai
 import Network.Wai.Handler.Warp
 import Servant
+import Control.Monad.Logger(runStdoutLoggingT)
+import Data.ByteString.Char8
+
+import Database.Persist.Postgresql
+
+------------------
+-- データベース接続
+------------------
+-- PostgreSQLデータベース接続
+connectDB :: IO ConnectionPool
+connectDB =
+  runStdoutLoggingT $ createPostgresqlPool conf connections
+  where
+    conf = pack "host=localhost dbname=postgres user=postgres password=password port=5432"
+    connections = 10
 
 ------------------
 -- 型定義
@@ -71,7 +86,7 @@ data URL = URL
     {urltypes :: UrlTypes
     ,url :: String
     ,urlmemo :: Maybe String
-        
+
     } deriving(Eq,Show)
 $(deriveJSON defaultOptions ''URL)
 
@@ -124,8 +139,9 @@ allUsers = return users
 yamada :: Uuid -> Handler User
 yamada _ = return (users !! 1)
 
-server :: Server API
-server = allUsers
+-- データベース接続を引数に取ってサーバAPIを返す
+server :: IO ConnectionPool -> Server API
+server conn = allUsers
     :<|> yamada
 
 ------------------
@@ -134,11 +150,11 @@ server = allUsers
 api :: Proxy API
 api = Proxy
 
-
 -- Application はWaiの型らしい
 -- type Application = Request -> ResourceT IO Response
 app :: Application
-app = serve api server
+app = serve api $ server connectDB
+
 
 -- runはWarpの関数らしい
 -- run::Port -> Application -> IO()
