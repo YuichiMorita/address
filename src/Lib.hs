@@ -12,21 +12,25 @@ import Data.Aeson.TH
 import Network.Wai
 import Network.Wai.Handler.Warp
 import Servant
-import Control.Monad.Logger(runStdoutLoggingT)
-import Data.ByteString.Char8
+import Data.ByteString.Char8 (pack)
+import Control.Monad.Logger (runStdoutLoggingT)
 
 import Database.Persist.Postgresql
 
 ------------------
 -- データベース接続
 ------------------
+-- PostgreSQL 設定
+connStr :: ConnectionString
+connStr = pack "host=localhost dbname=postgres user=postgres password=password port=5432"
+
+-- 接続数
+openConnectionCount :: Int
+openConnectionCount = 10
+
 -- PostgreSQLデータベース接続
-connectDB :: IO ConnectionPool
-connectDB =
-  runStdoutLoggingT $ createPostgresqlPool conf connections
-  where
-    conf = pack "host=localhost dbname=postgres user=postgres password=password port=5432"
-    connections = 10
+pgPool :: IO ConnectionPool
+pgPool = runStdoutLoggingT $ createPostgresqlPool connStr openConnectionCount
 
 ------------------
 -- 型定義
@@ -140,7 +144,7 @@ yamada :: Uuid -> Handler User
 yamada _ = return (users !! 1)
 
 -- データベース接続を引数に取ってサーバAPIを返す
-server :: IO ConnectionPool -> Server API
+server :: ConnectionPool -> Server API
 server conn = allUsers
     :<|> yamada
 
@@ -152,11 +156,20 @@ api = Proxy
 
 -- Application はWaiの型らしい
 -- type Application = Request -> ResourceT IO Response
-app :: Application
-app = serve api $ server connectDB
+app :: ConnectionPool -> Application
+app pool = serve api $ server pool
+
+-- DB接続して Applicationを返す
+mkApp :: IO Application
+mkApp = do
+  pool <- pgPool
+  return $ app pool
 
 
 -- runはWarpの関数らしい
 -- run::Port -> Application -> IO()
 startApp :: IO ()
-startApp = run 8080 app
+startApp = do
+  putStrLn "-- Start Address API Server --"
+  run 8080 =<< mkApp
+

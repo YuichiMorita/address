@@ -27,8 +27,8 @@ dependencies:
 - warp
 - persistent
 - persistent-postgresql
-- monad-logger
 - bytestring
+- monad-logger
 
 library:
   source-dirs: src
