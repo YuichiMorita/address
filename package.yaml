@@ -26,6 +26,7 @@ dependencies:
 - wai
 - warp
 - persistent
+- persistent-template
 - persistent-postgresql
 - bytestring
 - monad-logger

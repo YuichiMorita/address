@@ -1,10 +1,8 @@
-cabal-version: 1.12
-
--- This file has been generated from package.yaml by hpack version 0.31.1.
+-- This file has been generated from package.yaml by hpack version 0.28.2.
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 9a264dc0611b648aa7b5a0cccd974d880bdc81e1cdd25ad03c2e39d0184192f1
+-- hash: 7a89574e18d2913d6e368267f41766c14d20c47e999a76b3ff204b6be91bc909
 
 name:           address
 version:        0.1.0.0
@@ -17,9 +15,10 @@ copyright:      Yuichi Morita
 license:        BSD3
 license-file:   LICENSE
 build-type:     Simple
+cabal-version:  >= 1.10
 extra-source-files:
-    README.md
     ChangeLog.md
+    README.md
 
 source-repository head
   type: git
@@ -39,6 +38,7 @@ library
     , monad-logger
     , persistent
     , persistent-postgresql
+    , persistent-template
     , servant-server
     , wai
     , warp
@@ -59,6 +59,7 @@ executable address
     , monad-logger
     , persistent
     , persistent-postgresql
+    , persistent-template
     , servant-server
     , wai
     , warp
@@ -80,6 +81,7 @@ test-suite address-test
     , monad-logger
     , persistent
     , persistent-postgresql
+    , persistent-template
     , servant-server
     , wai
     , warp

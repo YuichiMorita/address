@@ -2,6 +2,15 @@
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE TypeOperators   #-}
 
+{-# LANGUAGE EmptyDataDecls             #-}
+{-# LANGUAGE FlexibleContexts           #-}
+{-# LANGUAGE GADTs                      #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE MultiParamTypeClasses      #-}
+{-# LANGUAGE OverloadedStrings          #-}
+{-# LANGUAGE QuasiQuotes                #-}
+{-# LANGUAGE TypeFamilies               #-}
+
 module Lib
     ( startApp
     , app
@@ -15,7 +24,9 @@ import Servant
 import Data.ByteString.Char8 (pack)
 import Control.Monad.Logger (runStdoutLoggingT)
 
+import Database.Persist
 import Database.Persist.Postgresql
+import Database.Persist.TH
 
 ------------------
 -- データベース接続
@@ -38,70 +49,71 @@ pgPool = runStdoutLoggingT $ createPostgresqlPool connStr openConnectionCount
 
 share [mkPersist sqlSettings, mkMigrate "migrateAll"] [persistLowerCase|
 Account
-  accounttype String
-  company String
-  title String
-  name String
-  memo String
-  created UTCTime default=CURRENT_TIME
-  deriving Show
+    accounttype String
+    company String
+    title String
+    name String
+    memo String
+    deriving Show
 
 Telltype
-	telltype String
+  telltype String
+  deriving Show
 
 Tell
-	accountId AccountId
-  telltypeId TellTypeId
-  number String
-  memo String
-  deriving Show
+    accountId AccountId
+    telltypeId TelltypeId
+    number String
+    memo String
+    deriving Show
 
 Emailtype
 	emailtype String
+    deriving Show
 
 Email
 	accountId AccountId
-  emailtypeId EmailtypeId
-  email String
-  memo String
-  deriving Show
+    emailtypeId EmailtypeId
+    email String
+    memo String
+    deriving Show
 
 Addresstype
 	adresstype String
+    deriving Show
 
 Address
-	accountId AccountId
-  addrtypeId AddresstypeId
-  postal String
-  pref String
-  addr1 String
-  addr2 String
-  bld String
-  place_name String
-  memo
-  deriving Show
+    accountId AccountId
+    addrtypeId AddresstypeId
+    postal String
+    pref String
+    addr1 String
+    addr2 String
+    bld String
+    place_name String
+    memo
+    deriving Show
 
 Url
-	accountId AccountId
-  urltype String
-  url String
-  memo
-  deriving Show
+    accountId AccountId
+    urltype String
+    url String
+    memo
+    deriving Show
 
 Tag
 	tag String
+    deriving Show
 
 TagAccount
 	accountId AccountId
 	tagId TagId
 	UniqueTagAccount accountId tagId
+    deriving Show
 
 |]
 
 
-
-
-{-
 
 --UUID
 type Uuid = String
@@ -110,6 +122,8 @@ type Uuid = String
 data UserTypes = Indivisual | Company deriving (Eq,Show)
 $(deriveJSON defaultOptions ''UserTypes)
 
+
+{-
 
 -- 電話種別型
 type TellTypes = String
@@ -184,10 +198,10 @@ $(deriveJSON defaultOptions ''User)
 ------------------
 -- エンドポイント
 ------------------
-type API = "users" :> Get '[JSON] [User]
-        :<|> "users" :> Capture "id" Uuid :> Get '[JSON] User
---      :<|> "users" :> ReqBody '[JSON] User :> Post '[JSON] User
---      :<|> "users" :> Capture "id" Uuid :> ReqBody '[JSON] User :> Put '[JSON] User
+type API = "users" :> Get '[JSON] [Account]
+        :<|> "users" :> Capture "id" Uuid :> Get '[JSON] Account
+--      :<|> "users" :> ReqBody '[JSON] Account :> Post '[JSON] Account
+--      :<|> "users" :> Capture "id" Uuid :> ReqBody '[JSON] Account :> Put '[JSON] Account
 --      :<|> "users" :> Capture "id" Uuid :> DeleteNoContent '[JSON] NoContent
 --      :<|> "tags" :> Get '[JSON] [Tag]
 --      :<|> "tags" :> Capture "id" Integer :> Get '[JSON] Tag
@@ -198,21 +212,21 @@ type API = "users" :> Get '[JSON] [User]
 ------------------
 -- ハンドラ
 ------------------
-users :: [User]
-users =  [ User "11111-1111-1111" Indivisual Nothing Nothing "山田 太郎" Nothing [] [] [] [] ["個人","Reju"]
-        , User "22222-2222-2222" Company (Just "株式会社井上") (Just "代表取締役") "井上 太郎" (Just "メモメモ") [Tell "携帯電話" "090-1111-1111" Nothing] [Email "勤務先" "info@iinoue.com" Nothing] [Address "勤務先" "530-0053" "大阪府" "大阪市北区末広町" "3-13" (Just "扇町松島ビル9F") Nothing Nothing] [URL "勤務先" "http://www.reju.jp/" Nothing] ["法人","Reju","REX"]
+users :: [Account]
+users =  [ Account "11111-1111-1111" Indivisual Nothing Nothing "山田 太郎" Nothing [] [] [] [] ["個人","Reju"]
+        , Account "22222-2222-2222" Company (Just "株式会社井上") (Just "代表取締役") "井上 太郎" (Just "メモメモ") [Tell "携帯電話" "090-1111-1111" Nothing] [Email "勤務先" "info@iinoue.com" Nothing] [Address "勤務先" "530-0053" "大阪府" "大阪市北区末広町" "3-13" (Just "扇町松島ビル9F") Nothing Nothing] [URL "勤務先" "http://www.reju.jp/" Nothing] ["法人","Reju","REX"]
         ]
 -- /users
-allUsers :: Handler [User]
-allUsers = return users
+allAccounts :: Handler [Account]
+allAccounts = return users
 
 -- /users/:Uuid
-yamada :: Uuid -> Handler User
+yamada :: Uuid -> Handler Account
 yamada _ = return (users !! 1)
 
 -- データベース接続を引数に取ってサーバAPIを返す
 server :: ConnectionPool -> Server API
-server conn = allUsers
+server conn = allAccounts
     :<|> yamada
 
 ------------------
