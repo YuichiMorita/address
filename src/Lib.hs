@@ -35,6 +35,74 @@ pgPool = runStdoutLoggingT $ createPostgresqlPool connStr openConnectionCount
 ------------------
 -- 型定義
 ------------------
+
+share [mkPersist sqlSettings, mkMigrate "migrateAll"] [persistLowerCase|
+Account
+  accounttype String
+  company String
+  title String
+  name String
+  memo String
+  created UTCTime default=CURRENT_TIME
+  deriving Show
+
+Telltype
+	telltype String
+
+Tell
+	accountId AccountId
+  telltypeId TellTypeId
+  number String
+  memo String
+  deriving Show
+
+Emailtype
+	emailtype String
+
+Email
+	accountId AccountId
+  emailtypeId EmailtypeId
+  email String
+  memo String
+  deriving Show
+
+Addresstype
+	adresstype String
+
+Address
+	accountId AccountId
+  addrtypeId AddresstypeId
+  postal String
+  pref String
+  addr1 String
+  addr2 String
+  bld String
+  place_name String
+  memo
+  deriving Show
+
+Url
+	accountId AccountId
+  urltype String
+  url String
+  memo
+  deriving Show
+
+Tag
+	tag String
+
+TagAccount
+	accountId AccountId
+	tagId TagId
+	UniqueTagAccount accountId tagId
+
+|]
+
+
+
+
+{-
+
 --UUID
 type Uuid = String
 
@@ -45,7 +113,6 @@ $(deriveJSON defaultOptions ''UserTypes)
 
 -- 電話種別型
 type TellTypes = String
-
 -- 電話番号型
 data Tell = Tell
     {telltype :: TellTypes
@@ -113,7 +180,7 @@ data User = User
   } deriving (Eq, Show)
 
 $(deriveJSON defaultOptions ''User)
-
+-}
 ------------------
 -- エンドポイント
 ------------------
