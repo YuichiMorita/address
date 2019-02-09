@@ -23,8 +23,12 @@ import Network.Wai.Handler.Warp
 import Servant
 import Data.ByteString.Char8 (pack)
 import Control.Monad.Logger (runStdoutLoggingT)
+import Control.Monad.Trans.Reader (runReaderT,ReaderT)
+import Control.Monad.Trans.Resource (ResourceT, runResourceT)
+import Data.Text (Text)
 
 import Database.Persist
+import Database.Persist.Sql (SqlPersistT, runSqlConn)
 import Database.Persist.Postgresql
 import Database.Persist.TH
 
@@ -43,158 +47,100 @@ openConnectionCount = 10
 pgPool :: IO ConnectionPool
 pgPool = runStdoutLoggingT $ createPostgresqlPool connStr openConnectionCount
 
+-- マイグレーション
+doMigration :: IO()
+doMigration = runStdoutLoggingT $ runResourceT $ withPostgresqlConn connStr $ runReaderT $ runMigration $ migrateAll
+
 ------------------
 -- 型定義
 ------------------
+--　自作コンフィグ型
+data MyAppConfig = MyAppConfig
+  { getPool :: ConnectionPool -- DBアクセス用プール
+  , getApplicationText :: Text -- アプリ設定テキスト
+  , getApplicationFlag :: Bool -- アプリ設定フラグ
+  }
+
+--　自作ハンドラ型
+-- https://qiita.com/cyclone_t/items/8b5a80162c4dff3a8770
+-- Servantでは、APIハンドラの引数はいじれないですが、ハンドラで扱うモナドは変更できます。Servantでの「参照用グローバル値」はハンドラでのモナドにReaderTを適用することで実装できます。
+type MyAppHandler = ReaderT MyAppConfig Handler
+
+-- APIハンドラ登録
+-- MyAppHandler型からMyAppServer型を生成
+type MyAppServer api = ServerT api MyAppHandler
+
+-- ユーザー種別型
+data AccountType = Indivisual | Company deriving (Eq,Show)
+$(deriveJSON defaultOptions ''AccountType)
+derivePersistField "AccountType"
 
 share [mkPersist sqlSettings, mkMigrate "migrateAll"] [persistLowerCase|
-Account
-    accounttype String
-    company String
-    title String
-    name String
-    memo String
-    deriving Show
+  Account
+      type AccountType
+      company Text Maybe
+      title Text Maybe
+      name Text
+      accountMemo Text Maybe
+      deriving Show
 
-Telltype
-  telltype String
-  deriving Show
+  Telltype
+      telltype Text
+      deriving Show
 
-Tell
+  Tell
+      accountId AccountId
+      telltypeId TelltypeId
+      number Text
+      tellMemo Text Maybe
+      deriving Show
+
+  Emailtype
+      emailtype Text
+      deriving Show
+
+  Email
     accountId AccountId
-    telltypeId TelltypeId
-    number String
-    memo String
-    deriving Show
+      emailtypeId EmailtypeId
+      email Text
+      emailMemo Text Maybe
+      deriving Show
 
-Emailtype
-	emailtype String
-    deriving Show
+  Addresstype
+      adresstype Text
+      deriving Show
 
-Email
-	accountId AccountId
-    emailtypeId EmailtypeId
-    email String
-    memo String
-    deriving Show
+  Address
+      accountId AccountId
+      addrtypeId AddresstypeId
+      postal Text
+      pref Text
+      addr1 Text
+      addr2 Text Maybe
+      bld Text Maybe
+      place_name Text
+      addressMemo Text Maybe
+      deriving Show
 
-Addresstype
-	adresstype String
-    deriving Show
+  Url
+      accountId AccountId
+      urltype Text
+      url Text
+      urlMemo Text Maybe
+      deriving Show
 
-Address
-    accountId AccountId
-    addrtypeId AddresstypeId
-    postal String
-    pref String
-    addr1 String
-    addr2 String
-    bld String
-    place_name String
-    memo
-    deriving Show
+  Tag
+      tag Text
+      deriving Show
 
-Url
-    accountId AccountId
-    urltype String
-    url String
-    memo
-    deriving Show
-
-Tag
-	tag String
-    deriving Show
-
-TagAccount
-	accountId AccountId
-	tagId TagId
-	UniqueTagAccount accountId tagId
-    deriving Show
-
+  TagAccount
+      accountId AccountId
+      tagId TagId
+      UniqueTagAccount accountId tagId
+      deriving Show
 |]
 
 
-
---UUID
-type Uuid = String
-
--- ユーザー種別型
-data UserTypes = Indivisual | Company deriving (Eq,Show)
-$(deriveJSON defaultOptions ''UserTypes)
-
-
-{-
-
--- 電話種別型
-type TellTypes = String
--- 電話番号型
-data Tell = Tell
-    {telltype :: TellTypes
-    ,number :: String
-    ,tellmemo :: Maybe String
-    } deriving(Eq,Show)
-$(deriveJSON defaultOptions ''Tell)
-
--- メール種別型
-type EmailTypes = String
-
--- メール型
-data Email = Email
-    {emailtype::EmailTypes
-    ,email :: String
-    ,emailmemo :: Maybe String
-    } deriving(Eq,Show)
-$(deriveJSON defaultOptions ''Email)
-
--- 住所種別型
-type AddrTypes = String
-
--- 住所型
-data Address = Address
-    {addrtype :: AddrTypes
-    ,postal :: String
-    ,pref :: String
-    ,addr1 :: String
-    ,addr2 ::String
-    ,bld :: Maybe String
-    ,place_name :: Maybe String
-    ,addrmemo :: Maybe String
-    } deriving(Eq,Show)
-
-$(deriveJSON defaultOptions ''Address)
-
--- URL種別型
-type UrlTypes = String
-
--- URL型
-data URL = URL
-    {urltypes :: UrlTypes
-    ,url :: String
-    ,urlmemo :: Maybe String
-
-    } deriving(Eq,Show)
-$(deriveJSON defaultOptions ''URL)
-
--- tag型
-type Tag = String
-
--- ユーザー型
-data User = User
-  { id        :: Uuid
-  , usertype :: UserTypes
-  , company :: Maybe String
-  , title  :: Maybe String
-  , name  :: String
-  , memo  :: Maybe String
-  , tells :: [Tell]
-  , emails :: [Email]
-  , addrs :: [Address]
-  , urls :: [URL]
-  , tags :: [Tag]
-  } deriving (Eq, Show)
-
-$(deriveJSON defaultOptions ''User)
--}
 ------------------
 -- エンドポイント
 ------------------
@@ -237,20 +183,20 @@ api = Proxy
 
 -- Application はWaiの型らしい
 -- type Application = Request -> ResourceT IO Response
-app :: ConnectionPool -> Application
-app pool = serve api $ server pool
+myAppApp :: MyAppConfig -> Application
+myAppApp = serve myAppApp . myAppToServer
 
--- DB接続して Applicationを返す
-mkApp :: IO Application
-mkApp = do
-  pool <- pgPool
-  return $ app pool
+myAppToServer :: MyAppConfig -> Server MyAppAPI
+myAppToServer cfg = enter(runReaderTNat cfg :: MyAppHandler :~> Handler) myAppToServer
 
-
--- runはWarpの関数らしい
--- run::Port -> Application -> IO()
+-- サーバ起動
 startApp :: IO ()
 startApp = do
-  putStrLn "-- Start Address API Server --"
-  run 8080 =<< mkApp
+  pool <- pgPool
+  args <- getArgs
+  let cfg = MyAppConfig {getPool = pool,getApplicationText = "AddressAPI", getApplicationFlag = True} --コンフィグ
+      arg1 = if not(null args) then Just(head args) else Nothing -- 実行時の第１引数を所得
+  case arg1 of
+    Just "migrate"  -> putStrLn "-- Executing Migration  --" >> doMigration -- 引数 migrateでマイグレーション実行
+    _               -> putStrLn "-- Start Address API Server --" >> run 8080 $ myAppApp cfg --引数なしでサーバ起動
 

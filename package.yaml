@@ -30,6 +30,10 @@ dependencies:
 - persistent-postgresql
 - bytestring
 - monad-logger
+- transformers
+- resourcet
+- text
+
 
 library:
   source-dirs: src

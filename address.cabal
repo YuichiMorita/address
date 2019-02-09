@@ -1,8 +1,10 @@
--- This file has been generated from package.yaml by hpack version 0.28.2.
+cabal-version: 1.12
+
+-- This file has been generated from package.yaml by hpack version 0.31.1.
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 7a89574e18d2913d6e368267f41766c14d20c47e999a76b3ff204b6be91bc909
+-- hash: 51db792260c17255d0c40eadd864daaa5314d7b2cba06a01a91be2036d385328
 
 name:           address
 version:        0.1.0.0
@@ -15,10 +17,9 @@ copyright:      Yuichi Morita
 license:        BSD3
 license-file:   LICENSE
 build-type:     Simple
-cabal-version:  >= 1.10
 extra-source-files:
-    ChangeLog.md
     README.md
+    ChangeLog.md
 
 source-repository head
   type: git
@@ -39,7 +40,10 @@ library
     , persistent
     , persistent-postgresql
     , persistent-template
+    , resourcet
     , servant-server
+    , text
+    , transformers
     , wai
     , warp
   default-language: Haskell2010
@@ -60,7 +64,10 @@ executable address
     , persistent
     , persistent-postgresql
     , persistent-template
+    , resourcet
     , servant-server
+    , text
+    , transformers
     , wai
     , warp
   default-language: Haskell2010
@@ -82,7 +89,10 @@ test-suite address-test
     , persistent
     , persistent-postgresql
     , persistent-template
+    , resourcet
     , servant-server
+    , text
+    , transformers
     , wai
     , warp
   default-language: Haskell2010
