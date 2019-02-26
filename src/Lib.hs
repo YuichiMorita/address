@@ -10,8 +10,11 @@ module Lib
 import Data.Aeson
 import Data.Aeson.TH
 import Network.Wai
-import Network.Wai.Handler.Warp
+import qualified Network.Wai.Handler.Warp as W
 import Servant
+
+import Database.HDBC
+import Database.HDBC.PostgreSQL
 
 ------------------
 -- 型定義
@@ -143,4 +146,4 @@ app = serve api server
 -- runはWarpの関数らしい
 -- run::Port -> Application -> IO()
 startApp :: IO ()
-startApp = run 8080 app
+startApp = W.run 8080 app
