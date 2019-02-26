@@ -17,6 +17,13 @@ import Database.HDBC
 import Database.HDBC.PostgreSQL
 
 ------------------
+-- データベース接続
+------------------
+-- PostgreSQL 接続
+conn :: IO Connection
+conn = connectPostgreSQL "host=localhost dbname=postgres user=postgres password=password port=5432"
+
+------------------
 -- 型定義
 ------------------
 --UUID
