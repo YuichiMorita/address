@@ -29,7 +29,7 @@ CREATE TABLE tell_types(	--電話種別テーブル
 CREATE TABLE tells(	--電話番号テーブル
 	id		serial		NOT NULL PRIMARY KEY,
 	users_id 	uuid	NOT NULL references users(id) ON DELETE CASCADE, --ユーザーID
-	tell_stypes_id 	integer NOT NULL references telltypes(id) ON DELETE RESTRICT, --電話番号種別
+	tell_stypes_id 	integer NOT NULL references tell_types(id) ON DELETE RESTRICT, --電話番号種別
 	number		VARCHAR(20)	NOT NULL, --電話番号
 	memo 		TEXT,		--メモ
 	created_at 	TIMESTAMPTZ	NOT NULL DEFAULT NOW()  --作成日時
@@ -45,7 +45,7 @@ CREATE TABLE email_types(	--メール種別テーブル
 CREATE TABLE emails(	--メールテーブル
 	id		serial		NOT NULL PRIMARY KEY,
 	users_id 	uuid NOT NULL references users(id) ON DELETE CASCADE, --ユーザーID
-	email_types_id 	integer NOT NULL	references emailtypes(id) ON DELETE RESTRICT, --メール種別
+	email_types_id 	integer NOT NULL	references email_types(id) ON DELETE RESTRICT, --メール種別
 	email		VARCHAR(255)	NOT NULL, --メールアドレス
 	memo 		TEXT,		--メモ
 	created_at 	TIMESTAMPTZ	NOT NULL DEFAULT NOW()  --作成日時
